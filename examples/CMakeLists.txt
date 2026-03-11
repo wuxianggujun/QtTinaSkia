@@ -1,0 +1,8 @@
+add_subdirectory(Renderer)
+add_subdirectory(HelloSkiaWidget)
+add_subdirectory(HelloSkiaOpenGLWidget)
+add_subdirectory(HelloSkiaOpenGLWindow)
+add_subdirectory(HelloSkiaQuickItem)
+add_subdirectory(HelloSkiaQuickWindow)
+add_subdirectory(FeatureShow)
+add_subdirectory(MixWidget)

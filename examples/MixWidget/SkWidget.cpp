@@ -21,6 +21,4 @@ void SkWidget::draw(SkCanvas* canvas, int elapsed)
     paint.setColor(SK_ColorRED);
     canvas->rotate(m_rotateAngle, this->width() / 2, this->height() / 2);
     canvas->drawString("Hello Skia", 600, 300, font, paint);
-
-    canvas->flush();
 }

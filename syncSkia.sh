@@ -7,5 +7,7 @@ else
     git pull --depth=1 "https://github.com/QtSkia/skia.git" QtSkia --allow-unrelated-histories
 fi
 export GIT_SYNC_DEPS_PATH=$PWD/DEPS-github
-python tools/git-sync-deps -v
+export PYTHONUTF8=1
+export GIT_SYNC_DEPS_SKIP_EMSDK=1
+python3 tools/git-sync-deps -v
 cd ../..

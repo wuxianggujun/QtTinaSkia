@@ -6,10 +6,7 @@
 #include "core/SkTextBlob.h"
 void TextRender::draw(SkCanvas *canvas, int elapsed, int w, int h)
 {
-    const char* fontFamily = nullptr;  // Default system family, if it exists.
-    SkFontStyle fontStyle;  // Default is normal weight, normal width,  upright slant.
-    sk_sp<SkFontMgr> fontManager = SkFontMgr::RefDefault();
-    sk_sp<SkTypeface> typeface = fontManager->legacyMakeTypeface(fontFamily, fontStyle);
+    sk_sp<SkTypeface> typeface = nullptr;
 
     SkFont font1(typeface, 64.0f, 1.0f, 0.0f);
     SkFont font2(typeface, 64.0f, 1.5f, 0.0f);
@@ -40,7 +37,6 @@ void TextRender::draw(SkCanvas *canvas, int elapsed, int w, int h)
     canvas->drawTextBlob(blob1.get(), 20.0f, 64.0f,  paint1);
     canvas->drawTextBlob(blob1.get(), 20.0f, 144.0f, paint2);
     canvas->drawTextBlob(blob2.get(), 20.0f, 224.0f, paint3);
-    canvas->flush();
 }
 
 void TextRender::init(int w, int h)

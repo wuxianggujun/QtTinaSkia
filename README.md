@@ -66,11 +66,13 @@ source.
 
 ## QtSkia
 
-QtSkia is an open source 2D graphics library which integration skia with qt's  render framework. 
+QtSkia is an open source 2D graphics library which integration skia with qt's render framework.
 
-QtSkia provide connection with QWidget、QOpenGLWidget、QQuickWindow、QQuickItem。
+This project aims to provide a stable and controllable rendering backend for Qt applications, unifying text, paths, animations, Canvas, and GPU rendering.
 
-Qt developer can import skia to qt easily。
+QtSkia provides connection with QWidget, QOpenGLWidget, QQuickWindow, QQuickItem. Qt developers can import skia to qt easily.
+
+It will support high-performance code editors, charts, drawing tools, and even custom UI components, reusing the same rendering capabilities across Windows/Linux/Android.
 
 # CI Badge
 
@@ -146,6 +148,8 @@ Qt developer can import skia to qt easily。
 
 [QtSkia us example](doc/Examples.md)
 
+QtTinaSkia upgrade docs: `doc/upgrade/README.md`
+
 
 # Scheduled plan
 
@@ -156,7 +160,7 @@ Qt developer can import skia to qt easily。
 - [x] local script for fetch code
 
 * Compile and ci
-- [x] specific compile flow with qmake
+- [x] CMake build flow (qmake removed)
 - [x] Windows platform compile.
 - [x] MacOS compile
 - [ ] Linux compile
@@ -196,9 +200,13 @@ Qt developer can import skia to qt easily。
 
 ## dependency library
 
-python 2
+Python 3.8+
 
-Qt 5.12.x 64-bit
+Qt 6.x (tested with Qt 6.9.1, MSVC 2022 x64)
+
+CMake 3.21+
+
+Visual Studio 2022 (Windows)
 
 Note:32bit/x86 arch, need the toolchain by google， QtSkia not suooprt，detail info can be found in: https://skia.org/user/build
 
@@ -252,6 +260,22 @@ chmod a+x syncSkia.sh
 ./syncSkia.sh
 ```
 
+### emsdk note (CanvasKit/WASM)
+
+Skia's `tools/git-sync-deps` will try to run `bin/activate-emsdk` by default.
+This repo sets the following env vars in sync scripts to avoid downloading huge emsdk assets by default:
+
+- `GIT_SYNC_DEPS_SKIP_EMSDK=1`
+- `PYTHONUTF8=1`
+
+If you need CanvasKit/WASM:
+
+```shell
+cd 3rdparty/skia
+PYTHONUTF8=1 GIT_SYNC_DEPS_SKIP_EMSDK=0 python3 tools/git-sync-deps -v
+python3 bin/activate-emsdk
+```
+
 ### skia and 3rdparty explain
 
 skia origin site: https://skia.googlesource.com/skia
@@ -273,12 +297,13 @@ QtSkia not edit there code，just add github、gitee mirror support and compiler
 
 ## compile
 
-use QtCreator import QtSkia.pro
+This repo is **CMake-only** (qmake project files have been removed).
 
-or run qt commandline:
-```shell
-qmake 
-make
+Windows (VS2022 x64):
+
+```powershell
+cmake -S . -B build/cmake-vs2022 -G "Visual Studio 17 2022" -A x64 -DQTSKIA_BUILD_SKIA=ON -DSKIA_BUILD_TYPE=Release
+cmake --build build/cmake-vs2022 --config Release
 ```
 
 ## Code struct
@@ -289,13 +314,13 @@ make
 |doc| document |
 |examples| examples|
 |QtSkia|QtSkia|
-|skiaBuild|Qt qmake compile skia |
+|cmake| CMake helper modules |
 
 
 # Sponsor
 
 If you feel the share content is good, treat the author a drink.
 
-<img src="https://gitee.com/jaredtao/jaredtao/raw/master/img/weixin.jpg?raw=true" width="25%" height="25%" /><img src="https://gitee.com/jaredtao/jaredtao/raw/master/img/zhifubao.jpg?raw=true" width="25%" height="25%" />
+<img src="doc/sponsor/zhifubao.jpg" width="25%" height="25%" /><img src="doc/sponsor/weixin.jpg" width="25%" height="25%" />
 
 it's WeChat Pay and Alipay

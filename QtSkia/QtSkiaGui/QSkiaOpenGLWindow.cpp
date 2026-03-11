@@ -1,21 +1,25 @@
 #include "QSkiaOpenGLWindow.h"
 
+#include "core/SkCanvas.h"
 #include "core/SkImageInfo.h"
 #include "core/SkSurface.h"
-#include "gpu/GrContext.h"
+#include "gpu/ganesh/GrDirectContext.h"
+#include "gpu/ganesh/gl/GrGLInterface.h"
+#include "gpu/ganesh/gl/GrGLDirectContext.h"
+#include "gpu/ganesh/SkSurfaceGanesh.h"
 
 #include <QOpenGLFunctions>
-#include <QTime>
+#include <QElapsedTimer>
 #include <QTimer>
 #include <QDebug>
 class QSkiaOpenGLWindowPrivate {
 public:
     QOpenGLFunctions funcs;
-    sk_sp<GrContext> context = nullptr;
+    sk_sp<GrDirectContext> context = nullptr;
     sk_sp<SkSurface> gpuSurface = nullptr;
     SkImageInfo info;
     QTimer timer;
-    QTime lastTime;
+    QElapsedTimer lastTime;
     int oldW;
     int oldH;
 };
@@ -30,6 +34,11 @@ QSkiaOpenGLWindow::QSkiaOpenGLWindow(QWindow* parent)
 QSkiaOpenGLWindow::~QSkiaOpenGLWindow()
 {
     makeCurrent();
+    m_dptr->gpuSurface = nullptr;
+    if (m_dptr->context) {
+        m_dptr->context->releaseResourcesAndAbandonContext();
+        m_dptr->context = nullptr;
+    }
     delete m_dptr;
     m_dptr = nullptr;
     doneCurrent();
@@ -38,13 +47,13 @@ QSkiaOpenGLWindow::~QSkiaOpenGLWindow()
 void QSkiaOpenGLWindow::initializeGL()
 {
     m_dptr->funcs.initializeOpenGLFunctions();
-    m_dptr->context = GrContext::MakeGL();
+    m_dptr->context = GrDirectContexts::MakeGL(GrGLMakeNativeInterface());
     SkASSERT(m_dptr->context);
     init(this->width(), this->height());
     onInit(this->width(), this->height());
-    m_dptr->lastTime = QTime::currentTime();
+    m_dptr->lastTime.start();
     m_dptr->oldW = width();
-    m_dptr->oldW = height();
+    m_dptr->oldH = height();
 }
 
 void QSkiaOpenGLWindow::resizeGL(int w, int h)
@@ -61,7 +70,8 @@ void QSkiaOpenGLWindow::init(int w, int h)
 {
     qWarning() << __FUNCTION__ << w << h;
     m_dptr->info = SkImageInfo::MakeN32Premul(w, h);
-    m_dptr->gpuSurface = SkSurface::MakeRenderTarget(m_dptr->context.get(), SkBudgeted::kNo, m_dptr->info);
+    m_dptr->gpuSurface = SkSurfaces::RenderTarget(m_dptr->context.get(),
+        skgpu::Budgeted::kNo, m_dptr->info);
     if (!m_dptr->gpuSurface) {
         qDebug() << "SkSurface::MakeRenderTarget return null";
         return;
@@ -81,9 +91,9 @@ void QSkiaOpenGLWindow::paintGL()
     if (!canvas) {
         return;
     }
-    const auto elapsed = m_dptr->lastTime.elapsed();
-    m_dptr->lastTime = QTime::currentTime();
+    const auto elapsed = static_cast<int>(m_dptr->lastTime.restart());
     canvas->save();
     this->draw(canvas, elapsed);
     canvas->restore();
+    m_dptr->context->flushAndSubmit();
 }

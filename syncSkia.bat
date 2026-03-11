@@ -7,5 +7,7 @@ if not exist "3rdparty/skia" (
     git pull --depth=1 https://github.com/QtSkia/skia.git QtSkia --allow-unrelated-histories
 )
 set GIT_SYNC_DEPS_PATH=%cd%/DEPS-github
-python tools/git-sync-deps -v
+set PYTHONUTF8=1
+set GIT_SYNC_DEPS_SKIP_EMSDK=1
+python3 tools/git-sync-deps -v
 popd

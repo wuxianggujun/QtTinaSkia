@@ -1,3 +1,15 @@
 bin
 *.user
+*.pro.user
 .vscode
+
+# IDE
+.idea/
+cmake-build-*/
+
+# CMake build dirs
+build/
+out/
+
+# Skia checkout (large; sync via scripts instead of committing)
+3rdparty/skia/

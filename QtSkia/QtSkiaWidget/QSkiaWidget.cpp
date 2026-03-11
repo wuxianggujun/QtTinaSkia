@@ -1,14 +1,14 @@
 #include "QSkiaWidget.h"
 
+#include "core/SkCanvas.h"
 #include "core/SkImageInfo.h"
 #include "core/SkSurface.h"
-#include "gpu/GrContext.h"
-#include "gpu/gl/GrGLInterface.h"
 #include "core/SkData.h"
 #include "core/SkImage.h"
 #include "core/SkStream.h"
+#include "gpu/ganesh/SkSurfaceGanesh.h"
 
-#include <QTime>
+#include <QElapsedTimer>
 #include <QTimer>
 #include <QResizeEvent>
 #include <QPainter>
@@ -21,7 +21,7 @@ public:
     QImage image;
     QByteArray data;
     QTimer timer;
-    QTime lastTime;
+    QElapsedTimer lastTime;
 };
 QSkiaWidget::QSkiaWidget(QWidget* parent)
     : QWidget(parent)
@@ -30,6 +30,7 @@ QSkiaWidget::QSkiaWidget(QWidget* parent)
     init(this->width(), this->height());
     connect(&m_dptr->timer, &QTimer::timeout, this, QOverload<>::of(&QSkiaWidget::update));
     m_dptr->timer.start(1000 / 60);
+    m_dptr->lastTime.start();
 }
 
 QSkiaWidget::~QSkiaWidget()
@@ -40,11 +41,11 @@ QSkiaWidget::~QSkiaWidget()
 
 void QSkiaWidget::init(int w, int h)
 {
-    m_dptr->info = SkImageInfo::Make(w, h, SkColorType::kRGBA_8888_SkColorType, kUnpremul_SkAlphaType);
+    m_dptr->info = SkImageInfo::Make(w, h, SkColorType::kRGBA_8888_SkColorType, kPremul_SkAlphaType);
     size_t rowByts = m_dptr->info.minRowBytes();
     size_t size = m_dptr->info.computeByteSize(rowByts);
     m_dptr->data.resize(static_cast<int>(size));
-    m_dptr->rasterSurface = SkSurface::MakeRasterDirect(m_dptr->info, m_dptr->data.data(), rowByts);
+    m_dptr->rasterSurface = SkSurfaces::WrapPixels(m_dptr->info, m_dptr->data.data(), rowByts);
     if (!m_dptr->rasterSurface) {
         qDebug() <<"SkSurface::MakeRasterN32Premul return null";
         return;
@@ -63,8 +64,7 @@ void QSkiaWidget::paintEvent(QPaintEvent* event)
     if (!canvas) {
         return;
     }
-    const auto elapsed = m_dptr->lastTime.elapsed();
-    m_dptr->lastTime = QTime::currentTime();
+    const auto elapsed = static_cast<int>(m_dptr->lastTime.restart());
     canvas->save();
     this->draw(canvas, elapsed);
     canvas->restore();

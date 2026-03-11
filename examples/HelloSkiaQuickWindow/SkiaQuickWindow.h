@@ -5,18 +5,19 @@
 #include "core/SkCanvas.h"
 #include "core/SkFont.h"
 #include "core/SkPaint.h"
+#include "core/SkPathBuilder.h"
 #include "effects/SkDashPathEffect.h"
 #include "effects/SkDiscretePathEffect.h"
 static SkPath star()
 {
     const SkScalar R = 115.2f, C = 128.0f;
-    SkPath path;
-    path.moveTo(C + R, C);
+    SkPathBuilder builder;
+    builder.moveTo(C + R, C);
     for (int i = 1; i < 8; ++i) {
         SkScalar a = 2.6927937f * i;
-        path.lineTo(C + R * cos(a), C + R * sin(a));
+        builder.lineTo(C + R * cos(a), C + R * sin(a));
     }
-    return path;
+    return builder.detach();
 }
 
 class SkiaQuickWindow : public QSkiaQuickWindow {
@@ -27,7 +28,7 @@ public:
         const SkScalar intervals[] = { 10.0f, 5.0f, 2.0f, 5.0f };
         size_t count = sizeof(intervals) / sizeof(intervals[0]);
         m_effect = SkPathEffect::MakeCompose(
-            SkDashPathEffect::Make(intervals, count, 0.0f),
+            SkDashPathEffect::Make(SkSpan(intervals, count), 0.0f),
             SkDiscretePathEffect::Make(10.0f, 4.0f));
         m_path = star();
 
@@ -56,8 +57,6 @@ public:
         canvas->rotate(m_rotateAngle, w / 2, h / 2);
         canvas->drawString("Hello Skia", w / 2 - 20, h / 2, font, p);
         canvas->drawLine(w * 0.2f, h * 0.2f, w * 0.4f, h * 0.4f, p);
-
-        canvas->flush();
     }
     virtual void drawAfterSG(SkCanvas* canvas, int elapsed) override
     {
@@ -65,7 +64,6 @@ public:
         int h = this->height();
         canvas->rotate(m_rotateAngle, w / 2, h / 2);
         canvas->drawPath(m_path, m_paint);
-        canvas->flush();
     }
 
 private:
